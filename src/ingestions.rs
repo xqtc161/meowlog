@@ -89,7 +89,7 @@ pub fn add_ingestion() {
     .with_help_message("Use the format YYYY-MM-DD HH:MM")
     .prompt()
     .unwrap();
-    let dose_num: f64 = inquire::prompt_f64("Enter the amount consumed").unwrap();
+    let dose_num: f64 = inquire::prompt_f64("Enter the amount consumed:").unwrap();
     let dose_unit = inquire::Select::new(
         "What unit should be used?",
         DoseUnit::iter().collect::<Vec<_>>(),
@@ -107,9 +107,6 @@ pub fn add_ingestion() {
         ingest_method: ingestion_method_select,
         time: date_time,
     };
-    ingesstions_bytes_loaded_des.insert(Uuid::new_v4(), ingestion.clone());
-    let ingestion_ser = bincode::serialize(&ingesstions_bytes_loaded_des).unwrap();
-    std::fs::write(INGESTIONS_FILE.to_string(), ingestion_ser);
     println!(
         "Substance:  {} ({})\nDose:       {}{}\nTime:       {}\n",
         ingestion.substance,
@@ -120,6 +117,7 @@ pub fn add_ingestion() {
     );
     let confirm =
         inquire::prompt_confirmation("Does the ingestion above look alright? [y/N]").unwrap();
+    dbg!(&confirm);
     if confirm {
         ingesstions_bytes_loaded_des.insert(Uuid::new_v4(), ingestion.clone());
         let ingestion_ser = bincode::serialize(&ingesstions_bytes_loaded_des).unwrap();
