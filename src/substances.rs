@@ -87,7 +87,18 @@ pub fn list_substances() -> Result<(), std::io::Error> {
 }
 
 pub fn substances_to_vec() -> Vec<String> {
-    let sub_read = std::fs::read(SUBSTANCES_FILE.to_string()).unwrap();
+    let sub_read_res = std::fs::read(SUBSTANCES_FILE.to_string());
+    let sub_read = match sub_read_res {
+        Ok(sub_contents) => sub_contents,
+        Err(_) => {
+            println!("Error! Substance file does not exist. Creating file...");
+            let hash: HashMap<Uuid, Substance> = HashMap::new();
+            let hash_ser = bincode::serialize(&hash).unwrap();
+            std::fs::write(SUBSTANCES_FILE.to_string(), hash_ser).unwrap();
+            let ret: Vec<u8> = vec![];
+            ret
+        }
+    };
     let sub_dec: HashMap<Uuid, Substance> = bincode::deserialize(&sub_read).unwrap();
     let mut sub_vec: Vec<String> = vec![];
     for (id, substance) in sub_dec.clone().into_iter() {
