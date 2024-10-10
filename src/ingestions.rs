@@ -2,7 +2,7 @@ use chrono::{NaiveDateTime, Utc};
 use color_eyre::Section;
 use inquire;
 use serde::{self, Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{collections::HashMap, process::exit};
 use strum::{EnumIter, IntoEnumIterator};
 use uuid::Uuid;
 
@@ -54,8 +54,15 @@ pub fn add_ingestion() {
     } else {
         std::fs::File::create(INGESTIONS_FILE.to_string()).unwrap();
         ingesstions_bytes_loaded_des = HashMap::new();
+        let ingesstions_bytes_loaded_ser =
+            bincode::serialize(&ingesstions_bytes_loaded_des).unwrap();
+        std::fs::write(INGESTIONS_FILE.to_string(), ingesstions_bytes_loaded_ser).unwrap();
     }
     let substances = crate::substances::substances_to_vec();
+    if substances.is_empty() {
+        eprintln!("Add a substance before you log an ingestions");
+        exit(1)
+    }
     let substance = inquire::Select::new("What did yout ingest?", substances)
         .prompt()
         .unwrap();
@@ -138,4 +145,10 @@ pub fn list_ingestions() -> Result<(), std::io::Error> {
     }
 
     Ok(())
+}
+
+pub fn create_ingestions_file() -> Result<(), std::io::Error> {
+    let hash: HashMap<Uuid, Ingestion> = HashMap::new();
+    let hash_ser = bincode::serialize(&hash).unwrap();
+    std::fs::write(INGESTIONS_FILE.to_string(), hash_ser)
 }

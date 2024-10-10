@@ -4,7 +4,7 @@ use std::{collections::HashMap, path::Path};
 use bincode::serialize;
 use chrono::Utc;
 use clap::{Parser, Subcommand};
-use config::LOCAL_PATH;
+use config::{INGESTIONS_FILE, LOCAL_PATH, SUBSTANCES_FILE};
 use git2;
 use inquire;
 use serde::{self, Deserialize, Serialize};
@@ -63,6 +63,34 @@ fn main() {
                 std::process::exit(1);
             }
         }
+    }
+    if !substances::path_exists(SUBSTANCES_FILE.to_string()) {
+        match substances::create_substances_file() {
+            Ok(_) => {
+                println!(
+                    "Created substances file at {:?}",
+                    SUBSTANCES_FILE.to_string()
+                )
+            }
+            Err(_) => {
+                eprintln!("Could not create substances file");
+                panic!()
+            }
+        };
+    }
+    if !substances::path_exists(INGESTIONS_FILE.to_string()) {
+        match ingestions::create_ingestions_file() {
+            Ok(_) => {
+                println!(
+                    "Created ingestions file at {:?}",
+                    INGESTIONS_FILE.to_string()
+                )
+            }
+            Err(_) => {
+                eprintln!("Could not create substances file");
+                panic!()
+            }
+        };
     }
     let cli = Cli::parse();
 

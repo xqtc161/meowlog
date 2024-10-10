@@ -106,3 +106,9 @@ pub fn substances_to_vec() -> Vec<String> {
     }
     sub_vec
 }
+
+pub fn create_substances_file() -> Result<(), std::io::Error> {
+    let hash: HashMap<Uuid, Substance> = HashMap::new();
+    let hash_ser = bincode::serialize(&hash).unwrap();
+    std::fs::write(SUBSTANCES_FILE.to_string(), hash_ser)
+}
