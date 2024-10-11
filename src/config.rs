@@ -3,8 +3,6 @@ use serde::Deserialize;
 use std::fs;
 use std::process::exit;
 
-use crate::substances;
-
 #[derive(Deserialize)]
 pub struct Config {
     pub save_dir: String,

@@ -1,18 +1,19 @@
 use serde::{self, Deserialize, Serialize};
 use std::collections::HashMap;
-use strum::{EnumIter, IntoEnumIterator};
+use strum::IntoEnumIterator;
 use uuid::Uuid;
 
 use crate::config::SUBSTANCES_FILE;
+use crate::substance_util::{ensure_substance_file, get_substance_class, substances_to_vec};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Substance {
-    name: String,
-    class: SubstanceClass,
+    pub name: String,
+    pub substance_class: SubstanceClass,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, strum::Display, strum::EnumIter)]
-enum SubstanceClass {
+pub enum SubstanceClass {
     Stimulant,
     Depressant,
     Psychedelic,
@@ -24,44 +25,18 @@ enum SubstanceClass {
     Neurotransmitter,
 }
 
-impl SubstanceClass {
-    fn to_string(&self) -> String {
-        match self {
-            Self::Stimulant => "Stimulant".to_string(),
-            Self::Depressant => "Depressant".to_string(),
-            Self::Psychedelic => "Psychedelic".to_string(),
-            Self::Dissociative => "Dissociative".to_string(),
-            Self::Cannabinoid => "Cannabinoid".to_string(),
-            Self::Entheogen => "Entheogen".to_string(),
-            Self::Deliriant => "Deliriant".to_string(),
-            Self::Empathogen => "Empathogen".to_string(),
-            Self::Neurotransmitter => "Neurotransmitter".to_string(),
-        }
-    }
-}
-pub fn path_exists(path: String) -> bool {
-    std::fs::metadata(path).is_ok()
-}
 pub fn add_substance() -> Result<(), std::io::Error> {
-    let mut substances_bytes_loaded_des: HashMap<Uuid, Substance>;
-    if path_exists(SUBSTANCES_FILE.to_string()) {
-        let substances_bytes_loaded = std::fs::read(SUBSTANCES_FILE.to_string()).unwrap();
-        substances_bytes_loaded_des = bincode::deserialize(&substances_bytes_loaded).unwrap();
-    } else {
-        std::fs::File::create(SUBSTANCES_FILE.to_string()).unwrap();
-        substances_bytes_loaded_des = HashMap::new();
-    }
+    let mut substances_bytes_loaded_des: HashMap<Uuid, Substance> = ensure_substance_file();
     let name = inquire::prompt_text("What is the substances name?").unwrap();
     if !substances_bytes_loaded_des.values().any(|x| x.name == name) {
         let class_variants = SubstanceClass::iter().collect::<Vec<_>>();
-        let class_select = inquire::Select::new("What type of substance is this?", class_variants)
-            .prompt()
-            .unwrap();
+        let substance_class =
+            get_substance_class("What type of substance is this?", class_variants);
         let substance = Substance {
             name,
-            class: class_select,
+            substance_class,
         };
-        let subs_hash = substances_bytes_loaded_des.insert(Uuid::new_v4(), substance);
+        substances_bytes_loaded_des.insert(Uuid::new_v4(), substance);
         let sub_enc = bincode::serialize(&substances_bytes_loaded_des).unwrap();
         match std::fs::write(SUBSTANCES_FILE.to_string(), sub_enc) {
             Ok(_) => Ok(()),
@@ -79,36 +54,120 @@ pub fn list_substances() -> Result<(), std::io::Error> {
     for (id, substance) in sub_dec.clone().into_iter() {
         println!(
             "Name:  {}\nClass: {:?}\nUUID:  {:?}\n",
-            substance.name, substance.class, id
+            substance.name, substance.substance_class, id
         );
     }
 
     Ok(())
 }
 
-pub fn substances_to_vec() -> Vec<String> {
-    let sub_read_res = std::fs::read(SUBSTANCES_FILE.to_string());
-    let sub_read = match sub_read_res {
-        Ok(sub_contents) => sub_contents,
-        Err(_) => {
-            println!("Error! Substance file does not exist. Creating file...");
-            let hash: HashMap<Uuid, Substance> = HashMap::new();
-            let hash_ser = bincode::serialize(&hash).unwrap();
-            std::fs::write(SUBSTANCES_FILE.to_string(), hash_ser).unwrap();
-            let ret: Vec<u8> = vec![];
-            ret
+pub fn remove_substance() -> Result<(), std::io::Error> {
+    let sub_read = std::fs::read(SUBSTANCES_FILE.to_string()).unwrap();
+    let mut sub_dec: HashMap<Uuid, Substance> = bincode::deserialize(&sub_read).unwrap();
+
+    let substances = substances_to_vec();
+    let substances_select =
+        inquire::MultiSelect::new("Which substance do you want to remove?", substances)
+            .prompt()
+            .unwrap();
+    dbg!(&substances_select);
+    for name in substances_select {
+        let confirm = inquire::prompt_confirmation(format!(
+            "Are you sure you want to remove '{}'? [y/N]",
+            name
+        ))
+        .unwrap();
+        if confirm {
+            // Clone to avoid immutable borrow
+            let sub_dec_clone = sub_dec.clone();
+            let uuid =
+                sub_dec_clone
+                    .iter()
+                    .find_map(|(id, val)| if val.name == name { Some(id) } else { None });
+            if uuid.is_some() {
+                let _ = sub_dec
+                    .remove(uuid.expect("Fatal error. Couldn't find substance UUID in HashMap."));
+            }
         }
-    };
-    let sub_dec: HashMap<Uuid, Substance> = bincode::deserialize(&sub_read).unwrap();
-    let mut sub_vec: Vec<String> = vec![];
-    for (id, substance) in sub_dec.clone().into_iter() {
-        sub_vec.push(substance.name);
     }
-    sub_vec
+
+    let sub_enc = bincode::serialize(&sub_dec).unwrap();
+    match std::fs::write(SUBSTANCES_FILE.to_string(), sub_enc) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(e),
+    }
 }
 
-pub fn create_substances_file() -> Result<(), std::io::Error> {
-    let hash: HashMap<Uuid, Substance> = HashMap::new();
-    let hash_ser = bincode::serialize(&hash).unwrap();
-    std::fs::write(SUBSTANCES_FILE.to_string(), hash_ser)
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, strum::Display, strum::EnumIter)]
+pub enum SubstanceEditOptions {
+    Name,
+    Class,
+}
+
+pub fn edit_substance() -> Result<(), std::io::Error> {
+    let sub_read = std::fs::read(SUBSTANCES_FILE.to_string()).unwrap();
+    let mut sub_dec: HashMap<Uuid, Substance> = bincode::deserialize(&sub_read).unwrap();
+
+    let substances = substances_to_vec();
+    let substance_name = inquire::Select::new("Which substance do you want to edit?", substances)
+        .prompt()
+        .unwrap();
+    dbg!(&substance_name);
+    let sub_dec_clone = sub_dec.clone();
+    let uuid_opt = sub_dec_clone.iter().find_map(|(id, val)| {
+        if val.name == substance_name {
+            Some(id)
+        } else {
+            None
+        }
+    });
+    if uuid_opt.is_some() {
+        let uuid = uuid_opt.clone().unwrap().to_owned();
+        let _ = sub_dec
+            .remove(uuid_opt.expect("Fatal error. Couldn't find substance UUID in HashMap."));
+        let edit_select = inquire::Select::new(
+            format!("[{}] What do you want to edit?", substance_name).as_str(),
+            SubstanceEditOptions::iter().collect::<Vec<_>>(),
+        )
+        .prompt()
+        .unwrap();
+        match edit_select {
+            SubstanceEditOptions::Name => {
+                let name_updated = inquire::prompt_text("What should the new name be?").unwrap();
+                let class = match sub_dec_clone
+                    .get(uuid_opt.expect("Fatal error. Couldn't find substance UUID in HashMap."))
+                {
+                    Some(class) => class.substance_class,
+                    None => {
+                        panic!("Fatal error. Couldn't find substance UUID in HashMap.")
+                    }
+                };
+                dbg!(&class);
+                let substance = Substance {
+                    name: name_updated,
+                    substance_class: class,
+                };
+                sub_dec.insert(uuid, substance);
+            }
+            SubstanceEditOptions::Class => {
+                let class_variants = SubstanceClass::iter().collect::<Vec<_>>();
+                let substance_class = get_substance_class(
+                    format!(
+                        "[{}] What should the new substance class be?",
+                        substance_name
+                    )
+                    .as_str(),
+                    class_variants,
+                );
+                let substance = Substance {
+                    name: substance_name,
+                    substance_class,
+                };
+                sub_dec.insert(uuid, substance);
+            }
+        }
+        let sub_enc = bincode::serialize(&sub_dec).unwrap();
+        std::fs::write(SUBSTANCES_FILE.to_string(), sub_enc).unwrap();
+    }
+    Ok(())
 }

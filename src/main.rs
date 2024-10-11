@@ -4,9 +4,11 @@ use clap::{Parser, Subcommand};
 use config::{INGESTIONS_FILE, LOCAL_PATH, SUBSTANCES_FILE};
 
 mod config;
+mod util;
 
 mod ingestions;
 mod ingestions_util;
+mod substance_util;
 mod substances;
 
 #[derive(Parser)]
@@ -55,15 +57,15 @@ fn main() {
         Some(Commands::ListIngestions) => ingestions::list_ingestions().unwrap(),
         Some(Commands::RemoveIngestion) => {}
         Some(Commands::AddSubstance) => substances::add_substance().unwrap(),
-        Some(Commands::EditSubstance) => {}
+        Some(Commands::EditSubstance) => substances::edit_substance().unwrap(),
         Some(Commands::ListSubstances) => substances::list_substances().unwrap(),
-        Some(Commands::RemoveSubstance) => {}
+        Some(Commands::RemoveSubstance) => substances::remove_substance().unwrap(),
         None => {}
     }
 }
 
 fn ensure_files() {
-    if !substances::path_exists(LOCAL_PATH.to_string()) {
+    if !util::path_exists(LOCAL_PATH.to_string()) {
         match std::fs::create_dir(LOCAL_PATH.to_string()) {
             Ok(_) => {}
             Err(e) => {
@@ -72,8 +74,8 @@ fn ensure_files() {
             }
         }
     }
-    if !substances::path_exists(SUBSTANCES_FILE.to_string()) {
-        match substances::create_substances_file() {
+    if !util::path_exists(SUBSTANCES_FILE.to_string()) {
+        match substance_util::create_substances_file() {
             Ok(_) => {
                 println!(
                     "Created substances file at {:?}",
@@ -86,7 +88,7 @@ fn ensure_files() {
             }
         };
     }
-    if !substances::path_exists(INGESTIONS_FILE.to_string()) {
+    if !util::path_exists(INGESTIONS_FILE.to_string()) {
         match ingestions::create_ingestions_file() {
             Ok(_) => {
                 println!(

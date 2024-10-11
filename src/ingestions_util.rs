@@ -1,16 +1,15 @@
+use crate::config::INGESTIONS_FILE;
 use crate::ingestions::{DoseUnit, Ingestion, IngestionMethod};
-use crate::{config::INGESTIONS_FILE, substances::Substance};
-use chrono::{NaiveDateTime, Utc};
-use color_eyre::Section;
+use crate::util::path_exists;
+use chrono::Utc;
 use inquire;
-use serde::{self, Deserialize, Serialize};
 use std::{collections::HashMap, process::exit};
-use strum::{EnumIter, IntoEnumIterator};
+use strum::IntoEnumIterator;
 use uuid::Uuid;
 
 pub fn ensure_ingestion_files() -> HashMap<Uuid, Ingestion> {
-    let mut ingesstions_bytes_loaded_des: HashMap<Uuid, Ingestion>;
-    if crate::substances::path_exists(INGESTIONS_FILE.to_string()) {
+    let ingesstions_bytes_loaded_des: HashMap<Uuid, Ingestion>;
+    if path_exists(INGESTIONS_FILE.to_string()) {
         let substances_bytes_loaded = std::fs::read(INGESTIONS_FILE.to_string()).unwrap();
         ingesstions_bytes_loaded_des = bincode::deserialize(&substances_bytes_loaded).unwrap();
     } else {
@@ -51,7 +50,7 @@ pub fn get_dose_unit() -> DoseUnit {
 }
 
 pub fn get_substance() -> String {
-    let substances = crate::substances::substances_to_vec();
+    let substances = crate::substance_util::substances_to_vec();
     if substances.is_empty() {
         eprintln!("Add a substance before you log an ingestions");
         exit(1)

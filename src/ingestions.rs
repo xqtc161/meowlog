@@ -1,16 +1,14 @@
 use crate::ingestions_util::{
-    self, ensure_ingestion_files, get_dose_unit, get_ingestion_confirmation, get_ingestion_method,
+    ensure_ingestion_files, get_dose_unit, get_ingestion_confirmation, get_ingestion_method,
     get_substance, get_user_datetime,
 };
-use chrono::{NaiveDateTime, Utc};
-use color_eyre::Section;
+use chrono::NaiveDateTime;
 use inquire;
 use serde::{self, Deserialize, Serialize};
-use std::{collections::HashMap, process::exit};
-use strum::{EnumIter, IntoEnumIterator};
+use std::collections::HashMap;
 use uuid::Uuid;
 
-use crate::{config::INGESTIONS_FILE, substances::Substance};
+use crate::config::INGESTIONS_FILE;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Ingestion {
@@ -77,7 +75,7 @@ pub fn add_ingestion() {
     if confirm {
         ingesstions_bytes_loaded_des.insert(Uuid::new_v4(), ingestion.clone());
         let ingestion_ser = bincode::serialize(&ingesstions_bytes_loaded_des).unwrap();
-        std::fs::write(INGESTIONS_FILE.to_string(), ingestion_ser);
+        std::fs::write(INGESTIONS_FILE.to_string(), ingestion_ser).unwrap();
     } else {
         add_ingestion();
     }
