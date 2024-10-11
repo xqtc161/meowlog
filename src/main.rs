@@ -1,19 +1,12 @@
 use core::panic;
-use std::{collections::HashMap, path::Path};
 
-use bincode::serialize;
-use chrono::Utc;
 use clap::{Parser, Subcommand};
 use config::{INGESTIONS_FILE, LOCAL_PATH, SUBSTANCES_FILE};
-use git2;
-use inquire;
-use serde::{self, Deserialize, Serialize};
-use strum::{EnumIter, IntoEnumIterator};
-use uuid::Uuid;
 
 mod config;
 
 mod ingestions;
+mod ingestions_util;
 mod substances;
 
 #[derive(Parser)]
@@ -53,8 +46,23 @@ enum Commands {
 }
 
 fn main() {
-    // let home = std::env::var("HOME").unwrap();
-    // let local_path = format!("{}/.local/share/meowlog", &home);
+    ensure_files();
+    let cli = Cli::parse();
+
+    match &cli.command {
+        Some(Commands::AddIngestion) => ingestions::add_ingestion(),
+        Some(Commands::EditIngestion) => {}
+        Some(Commands::ListIngestions) => ingestions::list_ingestions().unwrap(),
+        Some(Commands::RemoveIngestion) => {}
+        Some(Commands::AddSubstance) => substances::add_substance().unwrap(),
+        Some(Commands::EditSubstance) => {}
+        Some(Commands::ListSubstances) => substances::list_substances().unwrap(),
+        Some(Commands::RemoveSubstance) => {}
+        None => {}
+    }
+}
+
+fn ensure_files() {
     if !substances::path_exists(LOCAL_PATH.to_string()) {
         match std::fs::create_dir(LOCAL_PATH.to_string()) {
             Ok(_) => {}
@@ -91,18 +99,5 @@ fn main() {
                 panic!()
             }
         };
-    }
-    let cli = Cli::parse();
-
-    match &cli.command {
-        Some(Commands::AddIngestion) => ingestions::add_ingestion(),
-        Some(Commands::EditIngestion) => {}
-        Some(Commands::ListIngestions) => ingestions::list_ingestions().unwrap(),
-        Some(Commands::RemoveIngestion) => {}
-        Some(Commands::AddSubstance) => substances::add_substance().unwrap(),
-        Some(Commands::EditSubstance) => {}
-        Some(Commands::ListSubstances) => substances::list_substances().unwrap(),
-        Some(Commands::RemoveSubstance) => {}
-        None => {}
     }
 }
