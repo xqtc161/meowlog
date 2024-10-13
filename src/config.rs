@@ -39,4 +39,5 @@ lazy_static! {
         format!("{}/substances.bin", LOCAL_PATH.to_string()).to_string();
     pub static ref INGESTIONS_FILE: String =
         format!("{}/ingestions.bin", LOCAL_PATH.to_string()).to_string();
+    // pub static ref DRUGS: crate::drug_parser::Drugs = drug_parser::parse_drugs_json("drugs.json").unwrap();
 }

@@ -11,6 +11,8 @@ mod ingestions_util;
 mod substance_util;
 mod substances;
 
+// mod drug_parser;
+
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 #[command(propagate_version = true)]
@@ -53,7 +55,7 @@ fn main() {
 
     match &cli.command {
         Some(Commands::AddIngestion) => ingestions::add_ingestion(),
-        Some(Commands::EditIngestion) => {}
+        Some(Commands::EditIngestion) => {ingestions::edit_ingestion().unwrap()}
         Some(Commands::ListIngestions) => ingestions::list_ingestions().unwrap(),
         Some(Commands::RemoveIngestion) => {}
         Some(Commands::AddSubstance) => substances::add_substance().unwrap(),

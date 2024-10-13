@@ -6,7 +6,7 @@ use uuid::Uuid;
 use crate::config::SUBSTANCES_FILE;
 use crate::substance_util::{ensure_substance_file, get_substance_class, substances_to_vec};
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Substance {
     pub name: String,
     pub substance_class: SubstanceClass,
@@ -25,6 +25,11 @@ pub enum SubstanceClass {
     Neurotransmitter,
 }
 
+impl PartialEq for SubstanceClass {
+    fn eq(&self, other: &Self) -> bool {
+        std::mem::discriminant(self) == std::mem::discriminant(other)
+    }
+}
 pub fn add_substance() -> Result<(), std::io::Error> {
     let mut substances_bytes_loaded_des: HashMap<Uuid, Substance> = ensure_substance_file();
     let name = inquire::prompt_text("What is the substances name?").unwrap();
@@ -76,7 +81,7 @@ pub fn remove_substance() -> Result<(), std::io::Error> {
             "Are you sure you want to remove '{}'? [y/N]",
             name
         ))
-        .unwrap();
+            .unwrap();
         if confirm {
             // Clone to avoid immutable borrow
             let sub_dec_clone = sub_dec.clone();
@@ -129,8 +134,8 @@ pub fn edit_substance() -> Result<(), std::io::Error> {
             format!("[{}] What do you want to edit?", substance_name).as_str(),
             SubstanceEditOptions::iter().collect::<Vec<_>>(),
         )
-        .prompt()
-        .unwrap();
+            .prompt()
+            .unwrap();
         match edit_select {
             SubstanceEditOptions::Name => {
                 let name_updated = inquire::prompt_text("What should the new name be?").unwrap();
@@ -156,7 +161,7 @@ pub fn edit_substance() -> Result<(), std::io::Error> {
                         "[{}] What should the new substance class be?",
                         substance_name
                     )
-                    .as_str(),
+                        .as_str(),
                     class_variants,
                 );
                 let substance = Substance {
