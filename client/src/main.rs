@@ -15,6 +15,8 @@ lazy_static! {
 }
 mod util;
 
+mod drugs_parser;
+
 mod ingestions;
 mod ingestions_util;
 mod substance_util;
@@ -72,6 +74,7 @@ fn print_completions<G: Generator>(gen: G, cmd: &mut Command) {
 }
 
 fn main() {
+    drugs_parser::parse();
     ensure_files();
 
     let cli = Cli::parse();
