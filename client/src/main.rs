@@ -1,9 +1,18 @@
 use core::panic;
 
-use clap::{Parser, Subcommand};
-use config::{INGESTIONS_FILE, LOCAL_PATH, SUBSTANCES_FILE};
+use clap::{Command, Parser, Subcommand};
+use clap_complete::aot::{generate, Generator, Shell};
+use lazy_static::lazy_static;
+use std::io;
 
-mod config;
+lazy_static! {
+    pub static ref HOME: String = std::env::var("HOME").unwrap();
+    pub static ref LOCAL_PATH: String = format!("{}/.local/share/meowlog", HOME.to_string());
+    pub static ref SUBSTANCES_FILE: String =
+        format!("{}/substances.bin", LOCAL_PATH.to_string()).to_string();
+    pub static ref INGESTIONS_FILE: String =
+        format!("{}/ingestions.bin", LOCAL_PATH.to_string()).to_string();
+}
 mod util;
 
 mod ingestions;
@@ -47,13 +56,27 @@ enum Commands {
 
     /// Remove substance
     RemoveSubstance,
+
+    /// Generate shell completions
+    GenerateCompletions { shell: String },
+}
+
+use clap::CommandFactory;
+use std::str::FromStr;
+fn build_cli_command() -> Command {
+    Cli::command()
+}
+
+fn print_completions<G: Generator>(gen: G, cmd: &mut Command) {
+    generate(gen, cmd, cmd.get_name().to_string(), &mut io::stdout());
 }
 
 fn main() {
     ensure_files();
+
     let cli = Cli::parse();
 
-    match &cli.command {
+    match cli.command {
         Some(Commands::AddIngestion) => ingestions::add_ingestion(),
         Some(Commands::EditIngestion) => ingestions::edit_ingestion().unwrap(),
         Some(Commands::ListIngestions) => ingestions::list_ingestions().unwrap(),
@@ -62,6 +85,18 @@ fn main() {
         Some(Commands::EditSubstance) => substances::edit_substance().unwrap(),
         Some(Commands::ListSubstances) => substances::list_substances().unwrap(),
         Some(Commands::RemoveSubstance) => substances::remove_substance().unwrap(),
+        Some(Commands::GenerateCompletions { shell }) => {
+            let mut cmd = Cli::command();
+            eprintln!("Generating completion file for {shell}...");
+            if matches!(shell.as_str(), "nu" | "nushell") {
+                print_completions(clap_complete_nushell::Nushell, &mut cmd);
+            } else if let Ok(shell) = Shell::from_str(shell.as_str()) {
+                print_completions(shell, &mut cmd);
+            } else {
+                return eprintln!("Shell not recognized!");
+            };
+        }
+
         None => {}
     }
 }

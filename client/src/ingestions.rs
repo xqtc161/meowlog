@@ -11,8 +11,8 @@ use std::fmt::Formatter;
 use std::process::exit;
 use uuid::Uuid;
 
-use crate::config::INGESTIONS_FILE;
 use crate::substances::Substance;
+use crate::INGESTIONS_FILE;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct Ingestion {
@@ -150,7 +150,7 @@ pub fn edit_ingestion() -> Result<(), std::io::Error> {
             {
                 key.clone()
             } else {
-                unreachable!()
+                unsafe { std::hint::unreachable_unchecked() }
             }
         })
         .collect::<Vec<Uuid>>();
@@ -275,4 +275,3 @@ pub fn create_ingestions_file() -> Result<(), std::io::Error> {
     let hash_ser = bincode::serialize(&hash).unwrap();
     std::fs::write(INGESTIONS_FILE.to_string(), hash_ser)
 }
-

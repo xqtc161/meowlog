@@ -1,7 +1,7 @@
-use crate::config::INGESTIONS_FILE;
 use crate::ingestions::{DoseUnit, Ingestion, IngestionMethod};
 use crate::substances::Substance;
 use crate::util::path_exists;
+use crate::INGESTIONS_FILE;
 use chrono::NaiveDateTime;
 use inquire;
 use std::{collections::HashMap, process::exit};
@@ -9,19 +9,19 @@ use strum::IntoEnumIterator;
 use uuid::Uuid;
 
 pub fn ensure_ingestion_files() -> HashMap<Uuid, Ingestion> {
-    let ingesstions_bytes_loaded_des: HashMap<Uuid, Ingestion>;
+    let ingestions_bytes_loaded_des: HashMap<Uuid, Ingestion>;
     if path_exists(INGESTIONS_FILE.to_string()) {
         let substances_bytes_loaded =
             std::fs::read(INGESTIONS_FILE.to_string()).expect("Could not read ingestions file");
-        ingesstions_bytes_loaded_des = bincode::deserialize(&substances_bytes_loaded).expect("Could not deserialize ingestions file. If you are tech-savvy try fixing it with a hex editor.");
+        ingestions_bytes_loaded_des = bincode::deserialize(&substances_bytes_loaded).expect("Could not deserialize ingestions file. If you are tech-savvy try fixing it with a hex editor.");
     } else {
         std::fs::File::create(INGESTIONS_FILE.to_string()).unwrap();
-        ingesstions_bytes_loaded_des = HashMap::new();
+        ingestions_bytes_loaded_des = HashMap::new();
         let ingesstions_bytes_loaded_ser =
-            bincode::serialize(&ingesstions_bytes_loaded_des).unwrap();
+            bincode::serialize(&ingestions_bytes_loaded_des).unwrap();
         std::fs::write(INGESTIONS_FILE.to_string(), ingesstions_bytes_loaded_ser).unwrap();
     }
-    ingesstions_bytes_loaded_des
+    ingestions_bytes_loaded_des
 }
 
 pub fn get_user_date(current: NaiveDateTime) -> chrono::NaiveDate {

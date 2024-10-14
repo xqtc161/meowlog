@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::substances::SubstanceClass;
 use crate::util::path_exists;
-use crate::{config::SUBSTANCES_FILE, substances::Substance};
+use crate::{substances::Substance, SUBSTANCES_FILE};
 
 pub fn ensure_substance_file() -> HashMap<Uuid, Substance> {
     let substances_bytes_loaded_des: HashMap<Uuid, Substance>;
