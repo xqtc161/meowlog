@@ -8,14 +8,14 @@
 ### ⚠️ IMPORTANT
 
 The client's core functionality (managing substances and ingestions) works. The codebase is a mess and will be heavily
-refactired so use at your own risk. There will be no backwards compatibility until the first stable release.
+refactored so use at your own risk. There will be no backwards compatibility until the first stable release.
 
 Planned features:
 
 - [x] Managing ingestions and substances
-- [ ] Having a sensible set of default substances (taken from tripsit or psychonautwiki idk yet)
+- [ ] Having a sensible set of default substances (taken from TripSit or PsychonautWiki idk yet)
 - [ ] Circular Concurrency Checking for binary files
-- [ ] Server with syncing capabilities and maybe also a frontend with a similar featureset like the Psychonaut Wiki
+- [ ] Server with syncing capabilities and maybe also a frontend with a similar feature set like the Psychonaut Wiki
   Journal app
 - [ ] Referring to harm reduction resources in the CLI
 
