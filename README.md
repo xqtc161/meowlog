@@ -1,7 +1,35 @@
+![img.png](assets/img.png)
+
 # meowlog
 ---
-## WIP NOT WORKING AND SUBJECT TO CHANGE
+
+## WIP SUBJECT TO CHANGE
+
+### ⚠️ IMPORTANT
+
+The client's core functionality (managing substances and ingestions) works. The codebase is a mess and will be heavily
+refactired so use at your own risk. There will be no backwards compatibility until the first stable release.
+
+Planned features:
+
+- [x] Managing ingestions and substances
+- [ ] Having a sensible set of default substances (taken from tripsit or psychonautwiki idk yet)
+- [ ] Circular Concurrency Checking for binary files
+- [ ] Server with syncing capabilities and maybe also a frontend with a similar featureset like the Psychonaut Wiki
+  Journal app
+- [ ] Referring to harm reduction resources in the CLI
+
+Current problems:
+
+- [ ] Codebase is a mess
+- [ ] No tests
+- [ ] Poor error handling
+- [ ] Unoptimized memory usage
+
 ---
+
+### Client usage:
+
 ```
 Commands:
   add-ingestion     Adds ingestion

@@ -25,7 +25,15 @@ pub struct Ingestion {
 
 impl std::fmt::Display for Ingestion {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {}   {} {}{}", self.date, self.time.format("%H:%M"), self.substance.name, self.dose.value, self.dose.unit)
+        write!(
+            f,
+            "{} {}   {} {}{}",
+            self.date,
+            self.time.format("%H:%M"),
+            self.substance.name,
+            self.dose.value,
+            self.dose.unit
+        )
     }
 }
 
@@ -113,7 +121,6 @@ pub fn list_ingestions() -> Result<(), std::io::Error> {
     Ok(())
 }
 
-
 pub fn edit_ingestion() -> Result<(), std::io::Error> {
     let ing_des = ensure_ingestion_files();
     if ing_des.is_empty() {
@@ -124,17 +131,36 @@ pub fn edit_ingestion() -> Result<(), std::io::Error> {
     let mut ingest_sel_vec_id: Vec<Uuid> = Vec::new();
     let mut ingest_sel_vec_ing: Vec<Ingestion> = Vec::new();
 
-
     for ingestion in ing_des.clone().into_iter() {
         ingest_sel_vec_id.push(ingestion.0);
         ingest_sel_vec_ing.push(ingestion.1);
     }
 
-    let ingest_select = inquire::Select::new("Which ingestion do you want to edit?", ingest_sel_vec_ing).prompt().unwrap();
-    let ing_id = ing_des.iter()
-        .map(|(key, &ref val)| if val.substance.name == ingest_select.substance.name && val.substance.substance_class == ingest_select.substance.substance_class && val.date == ingest_select.date && val.time == ingest_select.time { key.clone() } else { unreachable!() }).collect::<Vec<Uuid>>();
+    let ingest_select =
+        inquire::Select::new("Which ingestion do you want to edit?", ingest_sel_vec_ing)
+            .prompt()
+            .unwrap();
+    let ing_id = ing_des
+        .iter()
+        .map(|(key, &ref val)| {
+            if val.substance.name == ingest_select.substance.name
+                && val.substance.substance_class == ingest_select.substance.substance_class
+                && val.date == ingest_select.date
+                && val.time == ingest_select.time
+            {
+                key.clone()
+            } else {
+                unreachable!()
+            }
+        })
+        .collect::<Vec<Uuid>>();
 
-    let edit_select = inquire::MultiSelect::new("What do you want to edit?", vec!["Substance", "Dose", "Ingestion Method", "Time", "Date"]).prompt().unwrap();
+    let edit_select = inquire::MultiSelect::new(
+        "What do you want to edit?",
+        vec!["Substance", "Dose", "Ingestion Method", "Time", "Date"],
+    )
+    .prompt()
+    .unwrap();
 
     for edit in edit_select {
         match edit {
@@ -249,3 +275,4 @@ pub fn create_ingestions_file() -> Result<(), std::io::Error> {
     let hash_ser = bincode::serialize(&hash).unwrap();
     std::fs::write(INGESTIONS_FILE.to_string(), hash_ser)
 }
+

@@ -11,7 +11,8 @@ use uuid::Uuid;
 pub fn ensure_ingestion_files() -> HashMap<Uuid, Ingestion> {
     let ingesstions_bytes_loaded_des: HashMap<Uuid, Ingestion>;
     if path_exists(INGESTIONS_FILE.to_string()) {
-        let substances_bytes_loaded = std::fs::read(INGESTIONS_FILE.to_string()).expect("Could not read ingestions file");
+        let substances_bytes_loaded =
+            std::fs::read(INGESTIONS_FILE.to_string()).expect("Could not read ingestions file");
         ingesstions_bytes_loaded_des = bincode::deserialize(&substances_bytes_loaded).expect("Could not deserialize ingestions file. If you are tech-savvy try fixing it with a hex editor.");
     } else {
         std::fs::File::create(INGESTIONS_FILE.to_string()).unwrap();
@@ -24,37 +25,32 @@ pub fn ensure_ingestion_files() -> HashMap<Uuid, Ingestion> {
 }
 
 pub fn get_user_date(current: NaiveDateTime) -> chrono::NaiveDate {
-    let current_time = current.time();
     let current_date = current.date();
-    let date: chrono::NaiveDate = inquire::CustomType::<chrono::NaiveDate>::new(
-        "Enter the date (YYYY-MM-DD):",
-    )
-        .with_placeholder("YYYY-MM-DD")
-        .with_default(current_date)
-        .with_parser(&|input| {
-            chrono::NaiveDate::parse_from_str(input, "%Y-%m-%d").map_err(|_| ())
-        })
-        .with_error_message("Please enter a valid date and time in the format YYYY-MM-DD")
-        .with_help_message("Use the format YYYY-MM-DD")
-        .prompt()
-        .unwrap();
+    let date: chrono::NaiveDate =
+        inquire::CustomType::<chrono::NaiveDate>::new("Enter the date (YYYY-MM-DD):")
+            .with_placeholder("YYYY-MM-DD")
+            .with_default(current_date)
+            .with_parser(&|input| {
+                chrono::NaiveDate::parse_from_str(input, "%Y-%m-%d").map_err(|_| ())
+            })
+            .with_error_message("Please enter a valid date and time in the format YYYY-MM-DD")
+            .with_help_message("Use the format YYYY-MM-DD")
+            .prompt()
+            .unwrap();
     date
 }
 
 pub fn get_user_time(current: NaiveDateTime) -> chrono::NaiveTime {
     let current_time = current.time();
-    let time: chrono::NaiveTime = inquire::CustomType::<chrono::NaiveTime>::new(
-        "Enter the time (HH:MM):",
-    )
-        .with_placeholder("HH:MM")
-        .with_default(current_time)
-        .with_parser(&|input| {
-            chrono::NaiveTime::parse_from_str(input, "%H:%M").map_err(|_| ())
-        })
-        .with_error_message("Please enter a valid time in the format HH:MM.")
-        .with_help_message("Use the format HH:MM")
-        .prompt()
-        .unwrap();
+    let time: chrono::NaiveTime =
+        inquire::CustomType::<chrono::NaiveTime>::new("Enter the time (HH:MM):")
+            .with_placeholder("HH:MM")
+            .with_default(current_time)
+            .with_parser(&|input| chrono::NaiveTime::parse_from_str(input, "%H:%M").map_err(|_| ()))
+            .with_error_message("Please enter a valid time in the format HH:MM.")
+            .with_help_message("Use the format HH:MM")
+            .prompt()
+            .unwrap();
     time
 }
 
@@ -63,8 +59,8 @@ pub fn get_dose_unit() -> DoseUnit {
         "What unit should be used?",
         DoseUnit::iter().collect::<Vec<_>>(),
     )
-        .prompt()
-        .unwrap();
+    .prompt()
+    .unwrap();
     dose_unit
 }
 
@@ -81,7 +77,13 @@ pub fn get_substance() -> Substance {
     let substance_file: HashMap<Uuid, Substance> = crate::substance_util::ensure_substance_file();
     let substances: Vec<Substance> = substance_file
         .into_iter()
-        .filter_map(|(_, s)| if s.name == substance_select { Some(s) } else { None })
+        .filter_map(|(_, s)| {
+            if s.name == substance_select {
+                Some(s)
+            } else {
+                None
+            }
+        })
         .collect();
 
     if substances.len() != 1 {
@@ -100,8 +102,8 @@ pub fn get_ingestion_method() -> IngestionMethod {
         "How did you ingest?",
         IngestionMethod::iter().collect::<Vec<_>>(),
     )
-        .prompt()
-        .unwrap();
+    .prompt()
+    .unwrap();
     ingestion_method
 }
 

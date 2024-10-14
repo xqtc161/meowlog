@@ -55,7 +55,7 @@ fn main() {
 
     match &cli.command {
         Some(Commands::AddIngestion) => ingestions::add_ingestion(),
-        Some(Commands::EditIngestion) => {ingestions::edit_ingestion().unwrap()}
+        Some(Commands::EditIngestion) => ingestions::edit_ingestion().unwrap(),
         Some(Commands::ListIngestions) => ingestions::list_ingestions().unwrap(),
         Some(Commands::RemoveIngestion) => {}
         Some(Commands::AddSubstance) => substances::add_substance().unwrap(),
